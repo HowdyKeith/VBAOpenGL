@@ -9,7 +9,6 @@ This library allows Excel (and other Office) VBA developers to create hardware-a
 - Simple wrapper functions for common OpenGL calls
 - Hardware-accelerated rendering in a dedicated window
 - Easy integration with existing Excel/VBA projects
-- [Add more specific features as you implement them]
 
 ## Requirements
 - Windows (OpenGL context creation relies on Win32 APIs)
