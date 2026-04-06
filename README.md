@@ -1,41 +1,53 @@
-# VBAOpenGL
+VBA OpenGL PhysX Engine v2.0
+A high-performance 3D engine built entirely in VBA (Visual Basic for Applications). This project leverages the Windows API and GDI+ to host a hardware-accelerated OpenGL context directly within a standalone window, featuring real-time physics, interactive UI, and 360° panoramic environments.
 
-**Run OpenGL visualizations directly from VBA code in a separate window.**
+🚀 Key Features
+Real-Time Sphere Physics: Custom physics engine supporting sphere-to-sphere and sphere-to-wall collisions.
 
-This library allows Excel (and other Office) VBA developers to create hardware-accelerated 3D graphics, animations, and visualizations without leaving the VBA environment.
+Anti-Jiggle Logic: Advanced static separation and friction (damping) calculations to ensure stable resting states.
 
-## Features
-- Create an OpenGL rendering context from VBA
-- Simple wrapper functions for common OpenGL calls
-- Hardware-accelerated rendering in a dedicated window
-- Easy integration with existing Excel/VBA projects
+Interactive 2D UI: An OpenGL-rendered overlay with responsive buttons for resetting physics and toggling modes.
 
-## Requirements
-- Windows (OpenGL context creation relies on Win32 APIs)
-- VBA6/VBA7 (Excel 2007+ recommended)
-- OpenGL drivers (most modern GPUs support it)
+360° Panoramic Skybox: Support for equirectangular textures with smooth mouse-look navigation.
 
-## Installation
-1. Download or clone this repository.
+Dynamic UV Mapping: Precise texture coordinates for spheres and cubes, moving away from simple auto-generation to detailed image wrapping.
 
-## Quick Start / Example
+Hardware Accelerated: Bypasses slow GDI drawing for raw GPU performance, throttled to a stable 60 FPS.
 
-```vba
-Sub OpenGLDemo()
-    Dim glWindow As New OpenGLWindow
-    
-    glWindow.Create 800, 600, "VBA OpenGL Demo"
-    
-    ' Simple render loop example
-    Do While glWindow.IsRunning
-        glClear GL_COLOR_BUFFER_BIT Or GL_DEPTH_BUFFER_BIT
-        
-        ' Your drawing code here (triangles, cubes, etc.)
-        DrawSomething
-        
-        glWindow.SwapBuffers
-        DoEvents
-    Loop
-    
-    glWindow.Destroy
-End Sub
+🛠 Technical Implementation
+Physics Engine
+The engine uses a Velocity-Verlet style approach for motion, combined with an impulse-based collision resolver.
+
+Friction: Velocity is multiplied by a FRICTION constant (0.98) each frame to simulate air resistance.
+
+Collision: Uses a unit-vector normal to calculate elastic bounces and physically separates overlapping objects to prevent high-frequency vibration ("jiggling").
+
+UI Architecture
+The UI is managed via a constant-driven coordinate system, allowing for easy adjustment of margins and spacing.
+
+VBA
+Private Const BTN_GAP As Long = 10 
+Private Const BTN_HEIGHT As Long = 35
+It utilizes a 2D Orthographic projection overlaying the 3D Perspective frustum.
+
+Assets & Compatibility
+Textures: Loads .png, .jpg, and .bmp via GDI+ into OpenGL Texture Objects.
+
+Environment: Includes a "Hotspot" detection system that triggers events based on your viewing angle (Yaw/Pitch) within the 360° space.
+
+📂 Installation & Setup
+Download the .cls and .bas files.
+
+Import them into any VBA-enabled host (Excel, Access, or Word).
+
+Ensure you have the required textures (map.png, 360_bg.jpg) in your project directory.
+
+Run InitDemo to launch the visualization window.
+
+📜 Version History
+v2.0 (Current): Added Physics, UV Texturing, and constant-based UI.
+
+v1.0 (Legacy): Initial proof-of-concept OpenGL renderer (available in the Releases tab).
+
+🤝 Contributing
+Feel free to fork this repository and submit pull requests. I'm currently exploring 2D Popups and potential Video Texture integration for future releases.
