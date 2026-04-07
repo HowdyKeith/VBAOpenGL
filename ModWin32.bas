@@ -1,8 +1,8 @@
 Attribute VB_Name = "ModWin32"
 Option Explicit
-
 ' =============================================
-' ModWin32.bas - Engine v1.45
+' ModWin32.bas
+' Version: 1.50 Bug Fixes
 ' =============================================
 Public g_OpenGLWindow As OpenGLWindow
 
@@ -21,11 +21,13 @@ Public g_OpenGLWindow As OpenGLWindow
     Public Declare PtrSafe Function SwapBuffers Lib "gdi32" (ByVal hDC As LongPtr) As Long
     Public Declare PtrSafe Function DestroyWindow Lib "user32" (ByVal hWnd As LongPtr) As Long
     Public Declare PtrSafe Function ShowWindow Lib "user32" (ByVal hWnd As LongPtr, ByVal nCmdShow As Long) As Long
+    Public Declare PtrSafe Function UpdateWindow Lib "user32" (ByVal hWnd As LongPtr) As Long
     Public Declare PtrSafe Function PeekMessage Lib "user32" Alias "PeekMessageA" (lpMsg As msg, ByVal hWnd As LongPtr, ByVal wMsgFilterMin As Long, ByVal wMsgFilterMax As Long, ByVal wRemoveMsg As Long) As Long
     Public Declare PtrSafe Function TranslateMessage Lib "user32" (lpMsg As msg) As Long
     Public Declare PtrSafe Function DispatchMessage Lib "user32" Alias "DispatchMessageA" (lpMsg As msg) As LongPtr
     Public Declare PtrSafe Sub PostQuitMessage Lib "user32" (ByVal nExitCode As Long)
     Public Declare PtrSafe Function UnregisterClass Lib "user32" Alias "UnregisterClassA" (ByVal lpClassName As String, ByVal hInstance As LongPtr) As Long
+
     ' OpenGL Core
     Public Declare PtrSafe Function wglCreateContext Lib "opengl32" (ByVal hDC As LongPtr) As LongPtr
     Public Declare PtrSafe Function wglMakeCurrent Lib "opengl32" (ByVal hDC As LongPtr, ByVal hRC As LongPtr) As Long
@@ -33,32 +35,40 @@ Public g_OpenGLWindow As OpenGLWindow
     Public Declare PtrSafe Sub glEnable Lib "opengl32" (ByVal cap As Long)
     Public Declare PtrSafe Sub glDisable Lib "opengl32" (ByVal cap As Long)
     Public Declare PtrSafe Sub glClear Lib "opengl32" (ByVal mask As Long)
+    Public Declare PtrSafe Sub glClearColor Lib "opengl32" (ByVal red As Single, ByVal green As Single, ByVal blue As Single, ByVal alpha As Single)
     Public Declare PtrSafe Sub glMatrixMode Lib "opengl32" (ByVal mode As Long)
     Public Declare PtrSafe Sub glLoadIdentity Lib "opengl32" ()
     Public Declare PtrSafe Sub glFrustum Lib "opengl32" (ByVal Left As Double, ByVal Right As Double, ByVal Bottom As Double, ByVal Top As Double, ByVal zNear As Double, ByVal zFar As Double)
     Public Declare PtrSafe Sub glOrtho Lib "opengl32" (ByVal Left As Double, ByVal Right As Double, ByVal Bottom As Double, ByVal Top As Double, ByVal zNear As Double, ByVal zFar As Double)
     Public Declare PtrSafe Sub glTranslatef Lib "opengl32" (ByVal x As Single, ByVal y As Single, ByVal z As Single)
+    Public Declare PtrSafe Sub glScalef Lib "opengl32" (ByVal x As Single, ByVal y As Single, ByVal z As Single)
     Public Declare PtrSafe Sub glRotatef Lib "opengl32" (ByVal Angle As Single, ByVal x As Single, ByVal y As Single, ByVal z As Single)
     Public Declare PtrSafe Sub glBegin Lib "opengl32" (ByVal mode As Long)
     Public Declare PtrSafe Sub glEnd Lib "opengl32" ()
     Public Declare PtrSafe Sub glColor4f Lib "opengl32" (ByVal red As Single, ByVal green As Single, ByVal blue As Single, ByVal alpha As Single)
+    Public Declare PtrSafe Sub glColor3f Lib "opengl32" (ByVal red As Single, ByVal green As Single, ByVal blue As Single)
     Public Declare PtrSafe Sub glVertex3f Lib "opengl32" (ByVal x As Single, ByVal y As Single, ByVal z As Single)
-    Public Declare PtrSafe Sub glVertex3d Lib "opengl32" (ByVal x As Double, ByVal y As Double, ByVal z As Double)
     Public Declare PtrSafe Sub glVertex2f Lib "opengl32" (ByVal x As Single, ByVal y As Single)
     Public Declare PtrSafe Sub glNormal3f Lib "opengl32" (ByVal nx As Single, ByVal ny As Single, ByVal nz As Single)
     Public Declare PtrSafe Sub glTexCoord2f Lib "opengl32" (ByVal s As Single, ByVal t As Single)
-    Public Declare PtrSafe Sub glTexCoord2d Lib "opengl32" (ByVal s As Double, ByVal t As Double)
     Public Declare PtrSafe Sub glPushMatrix Lib "opengl32" ()
     Public Declare PtrSafe Sub glPopMatrix Lib "opengl32" ()
     Public Declare PtrSafe Sub glBindTexture Lib "opengl32" (ByVal target As Long, ByVal texture As Long)
     Public Declare PtrSafe Sub glTexImage2D Lib "opengl32" (ByVal target As Long, ByVal level As Long, ByVal internalformat As Long, ByVal Width As Long, ByVal Height As Long, ByVal border As Long, ByVal format As Long, ByVal pixelType As Long, pixels As Any)
     Public Declare PtrSafe Sub glTexParameteri Lib "opengl32" (ByVal target As Long, ByVal pname As Long, ByVal param As Long)
-    Public Declare PtrSafe Sub glTexGeni Lib "opengl32" (ByVal coord As Long, ByVal pname As Long, ByVal param As Long)
     Public Declare PtrSafe Sub glGenTextures Lib "opengl32" (ByVal n As Long, ByRef textures As Long)
     Public Declare PtrSafe Sub glDeleteTextures Lib "opengl32" (ByVal n As Long, ByRef textures As Long)
     Public Declare PtrSafe Sub glShadeModel Lib "opengl32" (ByVal mode As Long)
     Public Declare PtrSafe Sub glBlendFunc Lib "opengl32" (ByVal sfactor As Long, ByVal dfactor As Long)
-    Public Declare PtrSafe Sub glCullFace Lib "opengl32" (ByVal mode As Long)
+    Public Declare PtrSafe Sub glPointSize Lib "opengl32" (ByVal size As Single)
+    Public Declare PtrSafe Sub glLightfv Lib "opengl32" (ByVal light As Long, ByVal pname As Long, params As Any)
+    Public Declare PtrSafe Sub glMaterialfv Lib "opengl32" (ByVal face As Long, ByVal pname As Long, params As Any)
+    Public Declare PtrSafe Sub glMaterialf Lib "opengl32" (ByVal face As Long, ByVal pname As Long, ByVal param As Single)
+
+    ' Timer
+    Public Declare PtrSafe Function QueryPerformanceCounter Lib "kernel32" (lpPerformanceCount As Currency) As Long
+    Public Declare PtrSafe Function QueryPerformanceFrequency Lib "kernel32" (lpFrequency As Currency) As Long
+
     ' GDI+
     Public Declare PtrSafe Function GdiplusStartup Lib "gdiplus" (token As LongPtr, inputbuf As GDIPlusStartupInput, output As Any) As Long
     Public Declare PtrSafe Function GdiplusShutdown Lib "gdiplus" (ByVal token As LongPtr) As Long
@@ -79,31 +89,119 @@ Public g_OpenGLWindow As OpenGLWindow
     Public Declare PtrSafe Function GdipGraphicsClear Lib "gdiplus" (ByVal graphics As LongPtr, ByVal color As Long) As Long
     Public Declare PtrSafe Function GdipBitmapLockBits Lib "gdiplus" (ByVal bitmap As LongPtr, rect As Any, ByVal flags As Long, ByVal PixelFormat As Long, lockedBitmapData As BitmapData) As Long
     Public Declare PtrSafe Function GdipBitmapUnlockBits Lib "gdiplus" (ByVal bitmap As LongPtr, lockedBitmapData As BitmapData) As Long
-    ' Performance
-    Public Declare PtrSafe Function QueryPerformanceCounter Lib "kernel32" (lpPerformanceCount As Currency) As Long
-    Public Declare PtrSafe Function QueryPerformanceFrequency Lib "kernel32" (lpFrequency As Currency) As Long
+    Public Declare PtrSafe Function GdipDrawImageRectI Lib "gdiplus" (ByVal graphics As LongPtr, ByVal image As LongPtr, ByVal x As Long, ByVal y As Long, ByVal Width As Long, ByVal Height As Long) As Long
 #End If
 
-' Constants
-Public Const SW_SHOW = 5: Public Const IDC_ARROW = 32512&: Public Const IDC_HAND = 32649&: Public Const CS_HREDRAW = &H2: Public Const CS_VREDRAW = &H1: Public Const CS_OWNDC = &H20
-Public Const WS_OVERLAPPEDWINDOW = &HCF0000: Public Const WS_CLIPSIBLINGS = &H4000000: Public Const WS_CLIPCHILDREN = &H2000000: Public Const CW_USEDEFAULT = &H80000000
-Public Const WM_CLOSE = &H10: Public Const WM_DESTROY = &H2: Public Const PM_REMOVE = &H1: Public Const WM_LBUTTONDOWN = &H201: Public Const WM_LBUTTONUP = &H202: Public Const WM_MOUSEMOVE = &H200: Public Const WM_MOUSEWHEEL = &H20A
-Public Const PFD_DRAW_TO_WINDOW = &H4: Public Const PFD_SUPPORT_OPENGL = &H20: Public Const PFD_DOUBLEBUFFER = &H1: Public Const PFD_TYPE_RGBA = 0
-Public Const GL_COLOR_BUFFER_BIT = &H4000&: Public Const GL_DEPTH_BUFFER_BIT = &H100&: Public Const GL_DEPTH_TEST = &HB71&: Public Const GL_QUADS = &H7: Public Const GL_TRIANGLE_STRIP = &H5&
-Public Const GL_PROJECTION = &H1701&: Public Const GL_MODELVIEW = &H1700&: Public Const GL_TEXTURE_2D = &HDE1&: Public Const GL_SMOOTH = &H1D01&
-Public Const GL_LIGHTING = &HB50&: Public Const GL_LIGHT0 = &H4000&: Public Const GL_FRONT = &H404&: Public Const GL_CULL_FACE = &HB44&: Public Const GL_BLEND = &HBE2&: Public Const GL_SRC_ALPHA = &H302&: Public Const GL_ONE_MINUS_SRC_ALPHA = &H303&
-Public Const GL_RGBA = &H1908&: Public Const GL_BGRA = &H80E1&: Public Const GL_UNSIGNED_BYTE = &H1401&: Public Const GL_LINEAR = &H2601&: Public Const GL_TEXTURE_MIN_FILTER = &H2801&: Public Const GL_TEXTURE_MAG_FILTER = &H2800&
-Public Const GL_TEXTURE_GEN_S = &H1900: Public Const GL_TEXTURE_GEN_T = &H1901: Public Const GL_TEXTURE_GEN_MODE = &H2500: Public Const GL_SPHERE_MAP = &H2402: Public Const GL_S = &H2000: Public Const GL_T = &H2001
-Public Const PixelFormat32bppARGB = &H26200A: Public Const ImageLockModeRead = &H1
+' --- Constants ---
+Public Const SW_SHOW = 5
+Public Const IDC_ARROW = 32512&
+Public Const IDC_HAND = 32649&
+Public Const CS_HREDRAW = &H2
+Public Const CS_VREDRAW = &H1
+Public Const CS_OWNDC = &H20
+Public Const WS_OVERLAPPEDWINDOW = &HCF0000
+Public Const WS_CLIPSIBLINGS = &H4000000
+Public Const WS_CLIPCHILDREN = &H2000000
+Public Const CW_USEDEFAULT = &H80000000
+Public Const WM_CLOSE = &H10
+Public Const WM_DESTROY = &H2
+Public Const WM_SIZE = &H5
+Public Const PM_REMOVE = &H1
+Public Const WM_LBUTTONDOWN = &H201
+Public Const WM_LBUTTONUP = &H202
+Public Const WM_MOUSEMOVE = &H200
+Public Const WM_MOUSEWHEEL = &H20A
 
-Public Type PIXELFORMATDESCRIPTOR: nSize As Integer: nVersion As Integer: dwFlags As Long: iPixelType As Byte: cColorBits As Byte: cRedBits As Byte: cRedShift As Byte: cGreenBits As Byte: cGreenShift As Byte: cBlueBits As Byte: cBlueShift As Byte: cAlphaBits As Byte: cAlphaShift As Byte: cAccumBits As Byte: cAccumRedBits As Byte: cAccumGreenBits As Byte: cAccumBlueBits As Byte: cAccumAlphaBits As Byte: cDepthBits As Byte: cStencilBits As Byte: cAuxBuffers As Byte: iLayerType As Byte: bReserved As Byte: dwLayerMask As Long: dwVisibleMask As Long: dwDamageMask As Long: End Type
-Public Type WNDCLASSEX: cbSize As Long: style As Long: lpfnWndProc As LongPtr: cbClsExtra As Long: cbWndExtra As Long: hInstance As LongPtr: hIcon As LongPtr: hCursor As LongPtr: hbrBackground As LongPtr: lpszMenuName As String: lpszClassName As String: hIconSm As LongPtr: End Type
+' Pixel format
+Public Const PFD_DRAW_TO_WINDOW As Long = &H4
+Public Const PFD_SUPPORT_OPENGL As Long = &H20
+Public Const PFD_DOUBLEBUFFER As Long = &H1
+Public Const PFD_TYPE_RGBA As Byte = 0
+Public Const PFD_MAIN_PLANE As Byte = 0
+
+' OpenGL
+Public Const GL_COLOR_BUFFER_BIT = &H4000&
+Public Const GL_DEPTH_BUFFER_BIT = &H100&
+Public Const GL_DEPTH_TEST = &HB71&
+Public Const GL_SMOOTH = &H1D01&
+Public Const GL_PROJECTION = &H1701&
+Public Const GL_MODELVIEW = &H1700&
+Public Const GL_TEXTURE_2D = &HDE1&
+Public Const GL_LIGHTING = &HB50&
+Public Const GL_LIGHT0 = &H4000&
+Public Const GL_AMBIENT = &H1200&
+Public Const GL_DIFFUSE = &H1201&
+Public Const GL_SPECULAR = &H1202&
+Public Const GL_POSITION = &H1203&
+Public Const GL_SHININESS = &H1601&
+Public Const GL_FRONT = &H404&
+Public Const GL_COLOR_MATERIAL = &HB57&
+Public Const GL_NORMALIZE = &HA1&
+Public Const GL_BLEND = &HBE2&
+Public Const GL_SRC_ALPHA = &H302&
+Public Const GL_ONE_MINUS_SRC_ALPHA = &H303&
+Public Const GL_POINT_SMOOTH = &HB10&
+Public Const GL_POINTS = &H0&
+Public Const GL_QUADS = &H7&
+Public Const GL_TRIANGLE_STRIP = &H5&
+Public Const GL_QUAD_STRIP As Long = &H8
+Public Const GL_CULL_FACE = &HB44&
+Public Const GL_FRONT_AND_BACK = &H408&
+Public Const GL_BACK = &H405&
+
+' Texture
+Public Const GL_RGBA = &H1908&
+Public Const GL_BGRA = &H80E1&
+Public Const GL_UNSIGNED_BYTE = &H1401&
+Public Const GL_LINEAR = &H2601&
+Public Const GL_TEXTURE_MIN_FILTER = &H2801&
+Public Const GL_TEXTURE_MAG_FILTER = &H2800&
+Public Const GL_TEXTURE_WRAP_S = &H2802&
+Public Const GL_TEXTURE_WRAP_T = &H2803&
+Public Const GL_CLAMP_TO_EDGE = &H812F&
+Public Const GL_REPEAT = &H2901&
+
+' GDI+
+Public Const PixelFormat32bppARGB = &H26200A
+Public Const ImageLockModeRead = &H1
+
+' --- Types ---
+Public Type PIXELFORMATDESCRIPTOR
+    nSize As Integer: nVersion As Integer: dwFlags As Long: iPixelType As Byte
+    cColorBits As Byte: cRedBits As Byte: cRedShift As Byte: cGreenBits As Byte
+    cGreenShift As Byte: cBlueBits As Byte: cBlueShift As Byte: cAlphaBits As Byte
+    cAlphaShift As Byte: cAccumBits As Byte: cAccumRedBits As Byte: cAccumGreenBits As Byte
+    cAccumBlueBits As Byte: cAccumAlphaBits As Byte: cDepthBits As Byte: cStencilBits As Byte
+    cAuxBuffers As Byte: iLayerType As Byte: bReserved As Byte: dwLayerMask As Long
+    dwVisibleMask As Long: dwDamageMask As Long
+End Type
+
+Public Type WNDCLASSEX
+    cbSize As Long: style As Long: lpfnWndProc As LongPtr: cbClsExtra As Long
+    cbWndExtra As Long: hInstance As LongPtr: hIcon As LongPtr: hCursor As LongPtr
+    hbrBackground As LongPtr: lpszMenuName As String: lpszClassName As String: hIconSm As LongPtr
+End Type
+
 Public Type POINTAPI: x As Long: y As Long: End Type
-Public Type msg: hWnd As LongPtr: message As Long: wParam As LongPtr: lParam As LongPtr: time As Long: pt As POINTAPI: End Type
-Public Type GDIPlusStartupInput: GdiplusVersion As Long: DebugEventCallback As LongPtr: SuppressBackgroundThread As Long: SuppressExternalCodecs As Long: End Type
-Public Type RECTF: Left As Single: Top As Single: Right As Single: Bottom As Single: End Type
-Public Type BitmapData: Width As Long: Height As Long: Stride As Long: PixelFormat As Long: Scan0 As LongPtr: Reserved As LongPtr: End Type
 
+Public Type msg
+    hWnd As LongPtr: message As Long: wParam As LongPtr: lParam As LongPtr
+    time As Long: pt As POINTAPI
+End Type
+
+Public Type GDIPlusStartupInput
+    GdiplusVersion As Long: DebugEventCallback As LongPtr
+    SuppressBackgroundThread As Long: SuppressExternalCodecs As Long
+End Type
+
+Public Type RECTF: Left As Single: Top As Single: Right As Single: Bottom As Single: End Type
+
+Public Type BitmapData
+    Width As Long: Height As Long: Stride As Long: PixelFormat As Long
+    Scan0 As LongPtr: Reserved As LongPtr
+End Type
+
+' --- WndProc Redirector ---
 Public Function GlobalWndProc(ByVal hWnd As LongPtr, ByVal uMsg As Long, ByVal wParam As LongPtr, ByVal lParam As LongPtr) As LongPtr
     If Not g_OpenGLWindow Is Nothing Then
         GlobalWndProc = g_OpenGLWindow.HandleMessage(hWnd, uMsg, wParam, lParam)
@@ -112,4 +210,6 @@ Public Function GlobalWndProc(ByVal hWnd As LongPtr, ByVal uMsg As Long, ByVal w
     End If
 End Function
 
-Public Function SetWndProc(ByVal pfn As LongPtr) As LongPtr: SetWndProc = pfn: End Function
+Public Function SetWndProc(ByVal pfn As LongPtr) As LongPtr
+    SetWndProc = pfn
+End Function
